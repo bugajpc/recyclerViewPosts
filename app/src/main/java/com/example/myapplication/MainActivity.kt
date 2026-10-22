@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
@@ -8,6 +9,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
 
 class MainActivity : AppCompatActivity() {
@@ -27,6 +29,12 @@ class MainActivity : AppCompatActivity() {
             Post("Computers", "https://m.media-amazon.com/images/I/81JlCSDZ3AL._AC_UF1000,1000_QL80_.jpg", -4)
         )
         val recylerView: RecyclerView = findViewById(R.id.recyclerView)
+        val profileImage: ImageView = findViewById(R.id.main_profile_imageView)
+
+        profileImage.setOnClickListener {
+            val intent = Intent(this, ProfileActivity::class.java)
+            startActivity(intent)
+        }
         val postsAdapter = MyAdapter(posts)
         recylerView.adapter = postsAdapter
         recylerView.layoutManager = LinearLayoutManager(this)
