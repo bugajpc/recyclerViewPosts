@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,11 +8,16 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.firestore
 import com.squareup.picasso.Picasso
 
 class MyAdapter(val posts: MutableList<Post>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
-
+    val db = Firebase.firestore
+    val auth = FirebaseAuth.getInstance()
+    val currentUser = auth.currentUser
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -33,7 +39,7 @@ class MyAdapter(val posts: MutableList<Post>) : RecyclerView.Adapter<MyAdapter.M
 
         Picasso.get().load(posts[position].imgURL).into(image)
         title.text = posts[position].title
-        likes.text = posts[position].likes.toString()
+        likes.text = "0"
 
         holder.itemView.setOnClickListener {
             Toast.makeText(holder.itemView.context, posts[position].title, Toast.LENGTH_SHORT).show()
@@ -48,25 +54,45 @@ class MyAdapter(val posts: MutableList<Post>) : RecyclerView.Adapter<MyAdapter.M
         if(posts[position].likes >= 0) {
             removeImage.visibility = View.INVISIBLE
         }
+        var currentLikes: Long = 0
+        db.collection("likes")
+            .whereEqualTo("pid", posts[position].id)
+            .get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    Log.d("TAG", "${document.id} => ${document.data}")
+                    currentLikes += document.data["value"] as Long
+                }
+                likes.text = currentLikes.toString()
+            }
+            .addOnFailureListener { exception ->
+                Log.w("TAG", "Error getting documents: ", exception)
+            }
+
         arrowUp.setOnClickListener {
-            posts[position].likes += 1
-            likes.text = posts[position].likes.toString()
-            if(posts[position].likes >= 0) {
-                removeImage.visibility = View.INVISIBLE
-            }
-            else {
-                removeImage.visibility = View.VISIBLE
-            }
+            if(currentUser == null) return@setOnClickListener
+            val like = hashMapOf(
+                "value" to 1,
+                "uid" to currentUser.uid,
+                "pid" to posts[position].id,
+            )
+            db.collection("likes").document(currentUser.uid + ":" + posts[position].id)
+                .set(like)
+                .addOnSuccessListener { Log.d("SinglePost", "DocumentSnapshot successfully written!") }
+                .addOnFailureListener { e -> Log.w("SinglePost", "Error writing document", e) }
+
         }
         arrowDown.setOnClickListener {
-            posts[position].likes -= 1
-            likes.text = posts[position].likes.toString()
-            if(posts[position].likes >= 0) {
-                removeImage.visibility = View.INVISIBLE
-            }
-            else {
-                removeImage.visibility = View.VISIBLE
-            }
+            if(currentUser == null) return@setOnClickListener
+            val like = hashMapOf(
+                "value" to -1,
+                "uid" to currentUser.uid,
+                "pid" to posts[position].id,
+            )
+            db.collection("likes").document(currentUser.uid + ":" + posts[position].id)
+                .set(like)
+                .addOnSuccessListener { Log.d("SinglePost", "DocumentSnapshot successfully written!") }
+                .addOnFailureListener { e -> Log.w("SinglePost", "Error writing document", e) }
         }
 
     }

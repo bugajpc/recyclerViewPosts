@@ -30,6 +30,13 @@
             android:layout_height="60dp"
             android:layout_weight="1"
             app:srcCompat="@drawable/outline_article_person_24" />
+
+        <ImageView
+            android:id="@+id/main_addPost_imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            app:srcCompat="@drawable/outline_add_box_24" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

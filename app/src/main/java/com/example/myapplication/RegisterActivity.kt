@@ -13,6 +13,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.firestore
 
 class RegisterActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
@@ -36,6 +37,7 @@ class RegisterActivity : AppCompatActivity() {
             insets
         }
         auth = FirebaseAuth.getInstance()
+        val db = Firebase.firestore
         val usernameEdit: EditText = findViewById(R.id.register_edit_username)
         val emailEdit: EditText = findViewById(R.id.register_edit_email)
         val passwordEdit: EditText = findViewById(R.id.register_edit_password)
@@ -57,12 +59,22 @@ class RegisterActivity : AppCompatActivity() {
                         // Sign in success, update UI with the signed-in user's information
                         Log.d("Register", "createUserWithEmail:success")
                         val user = auth.currentUser
-                        //go to Main
-
                         //add to firestore and if successful go to main
-                        val intent = Intent(this, MainActivity::class.java)
-                        startActivity(intent)
-                        finish()
+                        val newUser = hashMapOf(
+                            "username" to usernameEdit.text.toString(),
+                            "email" to emailEdit.text.toString()
+                        )
+
+                        db.collection("users").document(user!!.uid)
+                            .set(newUser)
+                            .addOnSuccessListener {
+                                Log.d("Register", "DocumentSnapshot successfully written!")
+                                val intent = Intent(this, MainActivity::class.java)
+                                startActivity(intent)
+                                finish()
+                            }
+                            .addOnFailureListener { e -> Log.w("Register", "Error writing document", e) }
+
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.w("Register", "createUserWithEmail:failure", task.exception)
